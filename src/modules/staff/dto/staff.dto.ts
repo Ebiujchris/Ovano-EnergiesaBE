@@ -38,11 +38,23 @@ export class CreateStaffDto {
 
   @IsBoolean()
   @IsOptional()
+  canViewDashboard?: boolean;
+
+  @IsBoolean()
+  @IsOptional()
+  canMakeSales?: boolean;
+
+  @IsBoolean()
+  @IsOptional()
   canAccessInventory?: boolean;
 
   @IsBoolean()
   @IsOptional()
   canApproveCredits?: boolean;
+
+  @IsBoolean()
+  @IsOptional()
+  canManageExpenses?: boolean;
 
   @IsBoolean()
   @IsOptional()
@@ -72,11 +84,23 @@ export class UpdateStaffDto {
 
   @IsBoolean()
   @IsOptional()
+  canViewDashboard?: boolean;
+
+  @IsBoolean()
+  @IsOptional()
+  canMakeSales?: boolean;
+
+  @IsBoolean()
+  @IsOptional()
   canAccessInventory?: boolean;
 
   @IsBoolean()
   @IsOptional()
   canApproveCredits?: boolean;
+
+  @IsBoolean()
+  @IsOptional()
+  canManageExpenses?: boolean;
 
   @IsBoolean()
   @IsOptional()

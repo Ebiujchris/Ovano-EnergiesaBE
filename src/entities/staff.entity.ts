@@ -55,6 +55,15 @@ export class Staff {
   @Column({ default: false })
   canViewReports: boolean;
 
+  @Column({ default: true })
+  canViewDashboard: boolean;
+
+  @Column({ default: true })
+  canMakeSales: boolean;
+
+  @Column({ default: false })
+  canManageExpenses: boolean;
+
   @Column({ nullable: true })
   notes?: string;
 

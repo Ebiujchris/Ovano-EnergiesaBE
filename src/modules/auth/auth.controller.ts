@@ -33,10 +33,10 @@ export class AuthController {
     return this.authService.changePassword(req.user.id ?? req.user.userId, body.currentPassword, body.newPassword);
   }
 
-  /** Returns the current session profile — works for both owners and staff */
+  /** Returns fresh session profile from DB — always reflects current permissions */
   @Get('me')
   @UseGuards(JwtAuthGuard)
   getMe(@Req() req: any) {
-    return req.user;
+    return this.authService.getMe(req.user);
   }
 }

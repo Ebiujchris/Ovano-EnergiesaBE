@@ -17,6 +17,8 @@ async function bootstrap() {
         'http://localhost:8083',
         'exp://localhost:8081',
         'https://e-duuka-fe.vercel.app',
+        'https://ovano-energies.vercel.app',
+        'https://ovano-energiesa-fe.vercel.app',
       ];
 
   app.enableCors({

@@ -13,6 +13,16 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
+  async getMe(jwtUser: any) {
+    if (jwtUser.accountType === 'staff') {
+      const staff = await this.staffService.findByPhone(jwtUser.phone);
+      if (!staff || staff.status !== 'active') return jwtUser; // fallback to token
+      return this.buildStaffProfile(staff);
+    }
+    // Owner — return token payload (owners don't have changing permissions)
+    return jwtUser;
+  }
+
   async register(createUserDto: CreateUserDto) {
     const existingUser = await this.usersService.findByPhone(createUserDto.phone);
 
@@ -151,7 +161,7 @@ export class AuthService {
       type: 'owner',
     };
     return this.jwtService.sign(payload, {
-      expiresIn: '7d',
+      expiresIn: '30d',
       secret: process.env.JWT_SECRET || 'your-secret-key',
     });
   }
@@ -165,14 +175,17 @@ export class AuthService {
       type: 'staff',
       role: staff.role,
       permissions: {
-        canAccessInventory: staff.canAccessInventory,
-        canApproveCredits: staff.canApproveCredits,
-        canViewReports: staff.canViewReports,
-        pagePermissions: {},
+        canViewDashboard:    staff.canViewDashboard    ?? true,
+        canMakeSales:        staff.canMakeSales        ?? true,
+        canAccessInventory:  staff.canAccessInventory  ?? false,
+        canApproveCredits:   staff.canApproveCredits   ?? false,
+        canManageExpenses:   staff.canManageExpenses   ?? false,
+        canViewReports:      staff.canViewReports      ?? false,
+        pagePermissions:     {},
       },
     };
     return this.jwtService.sign(payload, {
-      expiresIn: '7d',
+      expiresIn: '30d',
       secret: process.env.JWT_SECRET || 'your-secret-key',
     });
   }

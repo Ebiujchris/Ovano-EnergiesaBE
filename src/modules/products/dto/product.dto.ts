@@ -26,6 +26,10 @@ export class CreateProductDto {
 
   @IsOptional()
   @IsString()
+  subcategory?: string;
+
+  @IsOptional()
+  @IsString()
   description?: string;
 
   @IsOptional()
@@ -68,6 +72,10 @@ export class UpdateProductDto {
   @IsOptional()
   @IsString()
   category?: string;
+
+  @IsOptional()
+  @IsString()
+  subcategory?: string;
 
   @IsOptional()
   @IsString()
