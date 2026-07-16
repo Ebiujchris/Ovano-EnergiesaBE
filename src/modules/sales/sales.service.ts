@@ -133,6 +133,11 @@ export class SalesService {
     }
   }
 
+  async removeAll(shopId: string): Promise<{ deleted: number }> {
+    const result = await this.saleRepository.delete({ shopId });
+    return { deleted: result.affected ?? 0 };
+  }
+
   async voidSale(id: string, shopId: string, userId: string, voidSaleDto: VoidSaleDto): Promise<Sale> {
     const sale = await this.findOne(id, shopId);
     

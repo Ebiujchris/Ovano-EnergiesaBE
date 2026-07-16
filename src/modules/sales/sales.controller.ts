@@ -2,6 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, Quer
 import { SalesService } from './sales.service';
 import { CreateSaleDto, UpdateSaleDto, VoidSaleDto } from './dto/sale.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { PermissionsGuard, RequirePermission } from '../auth/permissions.guard';
 
 @Controller('sales')
 @UseGuards(JwtAuthGuard)
@@ -70,6 +71,13 @@ export class SalesController {
     @Req() req: any,
   ) {
     return this.salesService.update(id, req.user.shopId, updateSaleDto);
+  }
+
+  @Delete('all')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('ownerOnly')
+  removeAll(@Req() req: any) {
+    return this.salesService.removeAll(req.user.shopId);
   }
 
   @Delete(':id')
