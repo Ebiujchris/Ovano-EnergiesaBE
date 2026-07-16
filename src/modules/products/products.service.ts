@@ -1,9 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { Product } from '../../entities/product.entity';
-import { Sale } from '../../entities/sale.entity';
-import { PurchaseOrder } from '../../entities/purchase-order.entity';
 import { CreateProductDto, UpdateProductDto } from './dto/product.dto';
 
 @Injectable()
@@ -11,10 +9,7 @@ export class ProductsService {
   constructor(
     @InjectRepository(Product)
     private productRepository: Repository<Product>,
-    @InjectRepository(Sale)
-    private saleRepository: Repository<Sale>,
-    @InjectRepository(PurchaseOrder)
-    private purchaseOrderRepository: Repository<PurchaseOrder>,
+    private dataSource: DataSource,
   ) {}
 
   async create(createProductDto: CreateProductDto, shopId: string, userId: string): Promise<Product> {
@@ -85,9 +80,9 @@ export class ProductsService {
     const product = await this.productRepository.findOne({ where: { id, shopId } });
     if (!product) throw new NotFoundException(`Product with ID ${id} not found`);
 
-    // Nullify FK on related records to avoid constraint violation
-    await this.saleRepository.update({ productId: id }, { productId: null as any });
-    await this.purchaseOrderRepository.update({ productId: id }, { productId: null as any });
+    // Use raw queries to delete referencing rows before removing the product
+    await this.dataSource.query(`DELETE FROM sales WHERE "productId" = $1`, [id]);
+    await this.dataSource.query(`DELETE FROM purchase_orders WHERE "productId" = $1`, [id]);
 
     await this.productRepository.delete({ id, shopId });
   }
