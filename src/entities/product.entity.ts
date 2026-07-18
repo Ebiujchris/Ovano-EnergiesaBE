@@ -30,6 +30,9 @@ export class Product {
   subcategory?: string;
 
   @Column({ nullable: true })
+  brand?: string;
+
+  @Column({ nullable: true })
   description?: string;
 
   @Column({ nullable: true })
