@@ -2,10 +2,14 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { UsersService } from '../users/users.service';
+import { StaffService } from '../staff/staff.service';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(private readonly usersService: UsersService) {
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly staffService: StaffService,
+  ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
@@ -14,20 +18,27 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: any) {
-    // Staff tokens carry all permission data in the payload — trust it
+    // Staff — always fetch live permissions from DB so changes apply immediately
     if (payload.type === 'staff') {
+      const staff = await this.staffService.findByPhone(payload.phone);
+      if (!staff || staff.status !== 'active') {
+        throw new UnauthorizedException('Staff account is inactive or not found');
+      }
       return {
-        id: payload.sub,
-        userId: payload.sub,
-        shopId: payload.shopId,
-        phone: payload.phone,
-        accountType: 'staff',
-        role: payload.role,
-        permissions: payload.permissions ?? {
-          canAccessInventory: false,
-          canApproveCredits: false,
-          canViewReports: false,
-          pagePermissions: {},
+        id: staff.id,
+        userId: staff.id,
+        shopId: staff.shopId,
+        phone: staff.phone,
+        accountType: 'staff' as const,
+        role: staff.role,
+        permissions: {
+          canViewDashboard:   staff.canViewDashboard   ?? true,
+          canMakeSales:       staff.canMakeSales       ?? true,
+          canAccessInventory: staff.canAccessInventory ?? false,
+          canApproveCredits:  staff.canApproveCredits  ?? false,
+          canManageExpenses:  staff.canManageExpenses  ?? false,
+          canViewReports:     staff.canViewReports     ?? false,
+          pagePermissions:    {},
         },
       };
     }
@@ -44,13 +55,16 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       shopId: user.shopId,
       phone: user.phone,
       name: user.name,
-      accountType: 'owner',
+      accountType: 'owner' as const,
       role: 'owner',
       permissions: {
+        canViewDashboard:   true,
+        canMakeSales:       true,
         canAccessInventory: true,
-        canApproveCredits: true,
-        canViewReports: true,
-        pagePermissions: {},
+        canApproveCredits:  true,
+        canManageExpenses:  true,
+        canViewReports:     true,
+        pagePermissions:    {},
       },
     };
   }
