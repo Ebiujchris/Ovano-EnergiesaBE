@@ -213,10 +213,13 @@ export class AuthService {
       accountType: 'staff' as const,
       role: staff.role,
       permissions: {
-        canAccessInventory: staff.canAccessInventory,
-        canApproveCredits: staff.canApproveCredits,
-        canViewReports: staff.canViewReports,
-        pagePermissions: {},
+        canViewDashboard:   staff.canViewDashboard   ?? true,
+        canMakeSales:       staff.canMakeSales       ?? true,
+        canAccessInventory: staff.canAccessInventory ?? false,
+        canApproveCredits:  staff.canApproveCredits  ?? false,
+        canManageExpenses:  staff.canManageExpenses  ?? false,
+        canViewReports:     staff.canViewReports     ?? false,
+        pagePermissions:    {},
       },
     };
   }
