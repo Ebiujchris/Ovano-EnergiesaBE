@@ -34,6 +34,10 @@ export class CreateSaleDto {
 
   @IsString()
   userId: string;
+
+  @IsOptional()
+  @IsString()
+  createdByStaffId?: string;
 }
 
 export class UpdateSaleDto {

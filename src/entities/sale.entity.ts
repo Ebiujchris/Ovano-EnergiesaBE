@@ -85,6 +85,9 @@ export class Sale {
   @Column()
   productId: string;
 
+  @Column({ nullable: true })
+  createdByStaffId?: string;
+
   @CreateDateColumn()
   createdAt: Date;
 
