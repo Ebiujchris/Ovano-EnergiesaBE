@@ -1,9 +1,3 @@
-/**
- * Migration script to add createdByStaffId column to sales table
- * This runs on app startup and adds the column if it doesn't exist
- * Usage: Called automatically by the backend on startup
- */
-
 import { DataSource } from 'typeorm';
 
 export async function ensureCreatedByStaffIdColumn(dataSource: DataSource) {
@@ -11,7 +5,7 @@ export async function ensureCreatedByStaffIdColumn(dataSource: DataSource) {
     const queryRunner = dataSource.createQueryRunner();
     
     try {
-      // Check if column exists
+      // For PostgreSQL - check if column exists
       const query = `
         SELECT column_name 
         FROM information_schema.columns 
@@ -21,21 +15,17 @@ export async function ensureCreatedByStaffIdColumn(dataSource: DataSource) {
       const result = await queryRunner.query(query);
       
       if (result.length === 0) {
-        // Column doesn't exist, create it
-        console.log('Adding createdByStaffId column to sales table...');
+        console.log('[DB] Adding createdByStaffId column to sales table...');
         await queryRunner.query(`
           ALTER TABLE "sales" ADD COLUMN "createdByStaffId" varchar NULL
         `);
-        console.log('✓ createdByStaffId column added successfully');
-      } else {
-        console.log('✓ createdByStaffId column already exists');
+        console.log('[DB] ✓ createdByStaffId column added successfully');
       }
     } finally {
       await queryRunner.release();
     }
   } catch (error) {
-    console.error('Error ensuring createdByStaffId column:', error);
-    // Don't throw - allow app to continue, column might already exist
+    console.warn('[DB] Warning during migration:', (error as any).message);
+    // Don't throw - allow app to continue
   }
 }
-
