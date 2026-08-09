@@ -5,6 +5,7 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   
+  // CORS should be working - redeploying to fix
   // TODO: Run migrations once createdByStaffId is properly working
   // try {
   //   const dataSource = app.get(DataSource);
