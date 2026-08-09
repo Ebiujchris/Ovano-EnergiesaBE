@@ -25,14 +25,11 @@ export class SalesService {
 
     const totalAmount = createSaleDto.unitPrice * createSaleDto.quantity;
     
-    // Don't spread createdByStaffId if it's not provided to avoid DB issues
-    const saleData: any = {
+    const sale = this.saleRepository.create({
       ...createSaleDto,
       totalAmount,
       shopId,
-    };
-
-    const sale = this.saleRepository.create(saleData);
+    });
 
     const savedSale = await this.saleRepository.save(sale);
     
