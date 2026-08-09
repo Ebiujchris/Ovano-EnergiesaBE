@@ -85,8 +85,9 @@ export class Sale {
   @Column()
   productId: string;
 
-  @Column({ nullable: true })
-  createdByStaffId?: string;
+  // TODO: Re-enable once backend DB is properly set up
+  // @Column({ nullable: true })
+  // createdByStaffId?: string;
 
   @CreateDateColumn()
   createdAt: Date;

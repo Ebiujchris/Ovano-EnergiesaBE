@@ -35,9 +35,10 @@ export class CreateSaleDto {
   @IsString()
   userId: string;
 
-  @IsOptional()
-  @IsString()
-  createdByStaffId?: string;
+  // TODO: Re-enable once backend is properly set up
+  // @IsOptional()
+  // @IsString()
+  // createdByStaffId?: string;
 }
 
 export class UpdateSaleDto {

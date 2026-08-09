@@ -1,19 +1,17 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
-import { DataSource } from 'typeorm';
-import { ensureCreatedByStaffIdColumn } from './migration/add-createdByStaffId';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   
-  // Run migrations
-  try {
-    const dataSource = app.get(DataSource);
-    await ensureCreatedByStaffIdColumn(dataSource);
-  } catch (error) {
-    console.warn('Migration warning:', error);
-  }
+  // TODO: Run migrations once createdByStaffId is properly working
+  // try {
+  //   const dataSource = app.get(DataSource);
+  //   await ensureCreatedByStaffIdColumn(dataSource);
+  // } catch (error) {
+  //   console.warn('Migration warning:', error);
+  // }
   
   // Always include these origins; CORS_ORIGIN env can add more
   const defaultOrigins = [
