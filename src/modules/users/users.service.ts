@@ -65,6 +65,13 @@ export class UsersService {
     return users.map(user => this.sanitizeUser(user));
   }
 
+  async findByShopId(shopId: string): Promise<User | null> {
+    return await this.userRepository.findOne({
+      where: { shopId },
+      relations: ['shop'],
+    });
+  }
+
   async findOne(id: string): Promise<User> {
     const user = await this.userRepository.findOne({
       where: { id },

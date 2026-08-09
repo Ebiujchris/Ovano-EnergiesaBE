@@ -5,6 +5,7 @@ import { Sale, SaleStatus } from '../../entities/sale.entity';
 import { Credit } from '../../entities/credit.entity';
 import { ProductsService } from '../products/products.service';
 import { CreateSaleDto, UpdateSaleDto, VoidSaleDto } from './dto/sale.dto';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class SalesService {
@@ -14,6 +15,7 @@ export class SalesService {
     @InjectRepository(Credit)
     private creditRepository: Repository<Credit>,
     private productsService: ProductsService,
+    private usersService: UsersService,
   ) {}
 
   async create(createSaleDto: CreateSaleDto, shopId: string): Promise<Sale> {
@@ -25,8 +27,20 @@ export class SalesService {
 
     const totalAmount = createSaleDto.unitPrice * createSaleDto.quantity;
     
+    // If userId is not provided or is a staff ID (not a real user), find the shop owner
+    let finalUserId = createSaleDto.userId;
+    if (!finalUserId) {
+      try {
+        const owner = await this.usersService.findByShopId(shopId);
+        finalUserId = owner?.id;
+      } catch {
+        // If no owner found, leave userId empty (will be handled by nullable column in future)
+      }
+    }
+    
     const sale = this.saleRepository.create({
       ...createSaleDto,
+      userId: finalUserId,
       totalAmount,
       shopId,
     });
@@ -45,7 +59,7 @@ export class SalesService {
         description: `Credit sale for ${product.name} (Qty: ${createSaleDto.quantity})`,
         status: 'pending' as any,
         shopId: shopId,
-        userId: createSaleDto.userId,
+        userId: finalUserId,
       });
       
       await this.creditRepository.save(credit);
