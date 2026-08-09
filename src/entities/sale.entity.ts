@@ -73,11 +73,11 @@ export class Sale {
   @Column()
   shopId: string;
 
-  @ManyToOne(() => User, user => user.sales)
-  user: User;
+  @ManyToOne(() => User, user => user.sales, { nullable: true })
+  user?: User;
 
-  @Column()
-  userId: string;
+  @Column({ nullable: true })
+  userId?: string;
 
   @ManyToOne(() => Product, product => product.sales)
   product: Product;
@@ -86,8 +86,8 @@ export class Sale {
   productId: string;
 
   // TODO: Re-enable once backend DB is properly set up
-  // @Column({ nullable: true })
-  // createdByStaffId?: string;
+  @Column({ nullable: true })
+  createdByStaffId?: string;
 
   @CreateDateColumn()
   createdAt: Date;
