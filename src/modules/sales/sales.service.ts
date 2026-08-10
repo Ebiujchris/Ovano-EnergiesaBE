@@ -86,6 +86,18 @@ export class SalesService {
     });
   }
 
+  async findStaffSales(shopId: string, staffId: string, startDate: Date, endDate: Date): Promise<Sale[]> {
+    return await this.saleRepository.find({
+      where: {
+        shopId,
+        createdByStaffId: staffId,
+        createdAt: Between(startDate, endDate),
+      },
+      relations: ['product'],
+      order: { createdAt: 'DESC' },
+    });
+  }
+
   async findOne(id: string, shopId: string): Promise<Sale> {
     const sale = await this.saleRepository.findOne({
       where: { id, shopId },
@@ -124,19 +136,19 @@ export class SalesService {
   async getSalesStats(shopId: string, startDate: Date, endDate: Date) {
     const sales = await this.findByDateRange(shopId, startDate, endDate);
     
-    const totalSales = sales.reduce((sum, sale) => sum + sale.totalAmount, 0);
+    const totalSales = sales.reduce((sum, sale) => sum + Number(sale.totalAmount), 0);
     const totalProfit = sales.reduce((sum, sale) => {
       const buyingPrice = sale.product?.buyingPrice || 0;
-      const profit = (sale.unitPrice - buyingPrice) * sale.quantity;
+      const profit = (Number(sale.unitPrice) - Number(buyingPrice)) * Number(sale.quantity);
       return sum + profit;
     }, 0);
     const totalTransactions = sales.length;
     
     const cashSales = sales.filter(sale => sale.paymentType === 'cash')
-      .reduce((sum, sale) => sum + sale.totalAmount, 0);
+      .reduce((sum, sale) => sum + Number(sale.totalAmount), 0);
     
     const creditSales = sales.filter(sale => sale.paymentType === 'credit')
-      .reduce((sum, sale) => sum + sale.totalAmount, 0);
+      .reduce((sum, sale) => sum + Number(sale.totalAmount), 0);
 
     return {
       totalSales,

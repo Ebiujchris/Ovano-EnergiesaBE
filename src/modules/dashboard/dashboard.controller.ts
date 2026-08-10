@@ -9,7 +9,18 @@ export class DashboardController {
 
   @Get()
   getDashboardData(@Req() req: any) {
+    // If staff, return their personal dashboard
+    if (req.user.accountType === 'staff') {
+      return this.dashboardService.getStaffDashboard(req.user.shopId, req.user.id);
+    }
+    // Owner sees full business dashboard
     return this.dashboardService.getDashboardData(req.user.shopId);
+  }
+
+  @Get('staff/:staffId')
+  getStaffDashboard(@Req() req: any) {
+    // Allow owner to view any staff member's dashboard
+    return this.dashboardService.getStaffDashboard(req.user.shopId, req.params.staffId);
   }
 
   @Get('analytics')

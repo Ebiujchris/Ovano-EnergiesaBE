@@ -30,7 +30,12 @@ export class DashboardService {
     const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
     const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
 
+    console.log('Getting dashboard data for shop:', shopId);
+    console.log('Date range:', startOfDay, 'to', endOfDay);
+
     const todaysStats = await this.salesService.getSalesStats(shopId, startOfDay, endOfDay);
+    
+    console.log('Todays stats:', todaysStats);
 
     const startOfWeek = new Date(today);
     startOfWeek.setDate(today.getDate() - today.getDay());
@@ -79,6 +84,62 @@ export class DashboardService {
         paymentType: sale.paymentType,
         createdAt: sale.createdAt,
       })),
+    };
+  }
+
+  async getStaffDashboard(shopId: string, staffId: string) {
+    const today = new Date();
+    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+
+    // Get staff's sales for today
+    const staffSalesToday = await this.salesService.findStaffSales(shopId, staffId, startOfDay, endOfDay);
+    
+    // Calculate totals for today
+    const todayStats = {
+      totalSales: staffSalesToday.reduce((sum, sale) => sum + Number(sale.totalAmount), 0),
+      totalProfit: staffSalesToday.reduce((sum, sale) => sum + Number(sale.profit || 0), 0),
+      transactions: staffSalesToday.length,
+      cashSales: staffSalesToday.filter(s => s.paymentType === 'cash').reduce((sum, s) => sum + Number(s.totalAmount), 0),
+      creditSales: staffSalesToday.filter(s => s.paymentType === 'credit').reduce((sum, s) => sum + Number(s.totalAmount), 0),
+    };
+
+    // Get staff's sales for the week
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - today.getDay());
+    const staffSalesWeek = await this.salesService.findStaffSales(shopId, staffId, startOfWeek, today);
+    
+    const weekStats = {
+      totalSales: staffSalesWeek.reduce((sum, sale) => sum + Number(sale.totalAmount), 0),
+      totalProfit: staffSalesWeek.reduce((sum, sale) => sum + Number(sale.profit || 0), 0),
+      transactions: staffSalesWeek.length,
+    };
+
+    // Get staff's sales for the month
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const staffSalesMonth = await this.salesService.findStaffSales(shopId, staffId, startOfMonth, today);
+    
+    const monthStats = {
+      totalSales: staffSalesMonth.reduce((sum, sale) => sum + Number(sale.totalAmount), 0),
+      totalProfit: staffSalesMonth.reduce((sum, sale) => sum + Number(sale.profit || 0), 0),
+      transactions: staffSalesMonth.length,
+    };
+
+    // Recent sales made by this staff member
+    const recentSales = staffSalesToday.slice(0, 10).map(sale => ({
+      id: sale.id,
+      type: 'sale',
+      description: `${sale.product.name} × ${sale.quantity}`,
+      amount: sale.totalAmount,
+      paymentType: sale.paymentType,
+      createdAt: sale.createdAt,
+    }));
+
+    return {
+      today: todayStats,
+      week: weekStats,
+      month: monthStats,
+      recentActivity: recentSales,
     };
   }
 

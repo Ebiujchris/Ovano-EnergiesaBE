@@ -1,11 +1,13 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
+import { UsersService } from '../users/users.service';
 import { StaffService } from '../staff/staff.service';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
+    private readonly usersService: UsersService,
     private readonly staffService: StaffService,
   ) {
     super({
@@ -16,9 +18,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: any) {
-    // Staff — fetch live permissions from DB
-    if (payload.type === 'staff') {
-      try {
+    try {
+      // Staff — always fetch live permissions from DB so changes apply immediately
+      if (payload.type === 'staff') {
         const staff = await this.staffService.findByPhone(payload.phone);
         if (!staff || staff.status !== 'active') {
           throw new UnauthorizedException('Staff account is inactive or not found');
@@ -28,6 +30,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
           userId: staff.id,
           shopId: staff.shopId,
           phone: staff.phone,
+          name: staff.name,
           accountType: 'staff' as const,
           role: staff.role,
           permissions: {
@@ -40,34 +43,35 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
             pagePermissions:    {},
           },
         };
-      } catch (e: any) {
-        throw new UnauthorizedException(e?.message || 'Staff validation failed');
       }
-    }
 
-    // Owner — trust the JWT payload directly, no DB lookup
-    // This avoids NotFoundException crashing the guard
-    if (!payload.sub || !payload.shopId) {
-      throw new UnauthorizedException('Invalid token payload');
-    }
+      // Owner token — verify user still exists and is active
+      const user = await this.usersService.findOne(payload.sub);
+      if (!user || !user.isActive) {
+        throw new UnauthorizedException('Invalid or inactive user session');
+      }
 
-    return {
-      id: payload.sub,
-      userId: payload.sub,
-      shopId: payload.shopId,
-      phone: payload.phone,
-      name: payload.name,
-      accountType: 'owner' as const,
-      role: 'owner',
-      permissions: {
-        canViewDashboard:   true,
-        canMakeSales:       true,
-        canAccessInventory: true,
-        canApproveCredits:  true,
-        canManageExpenses:  true,
-        canViewReports:     true,
-        pagePermissions:    {},
-      },
-    };
+      return {
+        id: user.id,
+        userId: user.id,
+        shopId: user.shopId,
+        phone: user.phone,
+        name: user.name,
+        accountType: 'owner' as const,
+        role: 'owner',
+        permissions: {
+          canViewDashboard:   true,
+          canMakeSales:       true,
+          canAccessInventory: true,
+          canApproveCredits:  true,
+          canManageExpenses:  true,
+          canViewReports:     true,
+          pagePermissions:    {},
+        },
+      };
+    } catch (err) {
+      console.error('[JWT validate] error:', err instanceof Error ? err.stack ?? err.message : err);
+      throw new UnauthorizedException('Invalid or inactive user session');
+    }
   }
 }

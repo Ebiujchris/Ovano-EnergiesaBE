@@ -11,7 +11,14 @@ export class SalesController {
 
   @Post()
   create(@Body() createSaleDto: CreateSaleDto, @Req() req: any) {
-    return this.salesService.create(createSaleDto, req.user.shopId);
+    const staffInfo = req.user.accountType === 'staff' 
+      ? { createdByStaffId: req.user.id, createdByStaffName: req.user.name }
+      : { createdByStaffId: null, createdByStaffName: 'Owner' };
+    
+    return this.salesService.create({
+      ...createSaleDto,
+      ...staffInfo,
+    }, req.user.shopId);
   }
 
   @Get()
