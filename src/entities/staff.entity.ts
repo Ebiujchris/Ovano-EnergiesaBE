@@ -5,6 +5,7 @@ export enum StaffRole {
   OWNER = 'owner',
   MANAGER = 'manager',
   CASHIER = 'cashier',
+  SALES = 'sales',
   STOCK_KEEPER = 'stock_keeper'
 }
 
