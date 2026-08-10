@@ -27,8 +27,18 @@ export class SalesService {
 
     const totalAmount = createSaleDto.unitPrice * createSaleDto.quantity;
     
-    // If userId is not provided or is a staff ID (not a real user), find the shop owner
+    // If userId is not provided or is invalid (e.g., staff ID), find the shop owner
     let finalUserId = createSaleDto.userId;
+    if (finalUserId) {
+      // Check if the userId exists in the users table
+      try {
+        await this.usersService.findOne(finalUserId);
+      } catch {
+        // Invalid userId (likely a staff ID), use shop owner instead
+        finalUserId = undefined;
+      }
+    }
+    
     if (!finalUserId) {
       try {
         const owner = await this.usersService.findByShopId(shopId);
