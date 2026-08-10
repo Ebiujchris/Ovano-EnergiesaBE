@@ -3,6 +3,14 @@ import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { DataSource } from 'typeorm';
 
+// Global runtime error handlers to avoid process exit on unexpected errors
+process.on('unhandledRejection', (reason) => {
+  console.error('[UNHANDLED_REJECTION]', reason instanceof Error ? reason.stack ?? reason.message : reason);
+});
+process.on('uncaughtException', (err) => {
+  console.error('[UNCAUGHT_EXCEPTION]', err instanceof Error ? err.stack ?? err.message : err);
+});
+
 async function runMigrations(dataSource: DataSource) {
   const q = dataSource.createQueryRunner();
   try {
@@ -41,6 +49,8 @@ async function runMigrations(dataSource: DataSource) {
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  console.log('[BOOT] DATABASE_URL present:', !!process.env.DATABASE_URL);
 
   // Run migrations on startup
   try {
