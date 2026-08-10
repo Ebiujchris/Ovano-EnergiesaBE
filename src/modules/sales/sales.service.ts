@@ -91,11 +91,14 @@ export class SalesService {
 
   async findByDateRange(shopId: string, startDate: Date, endDate: Date): Promise<Sale[]> {
     return await this.saleRepository.find({
-      where: {
-        shopId,
-        createdAt: Between(startDate, endDate),
-      },
+      where: { shopId, createdAt: Between(startDate, endDate) },
       relations: ['product'],
+      select: {
+        id: true, quantity: true, unitPrice: true, totalAmount: true,
+        paymentType: true, customerName: true, status: true, createdAt: true,
+        shopId: true, productId: true,
+        product: { id: true, name: true, buyingPrice: true, sellingPrice: true },
+      },
       order: { createdAt: 'DESC' },
     });
   }

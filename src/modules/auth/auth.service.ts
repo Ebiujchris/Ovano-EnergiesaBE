@@ -157,10 +157,14 @@ export class AuthService {
       sub: user.id,
       id: user.id,
       phone: user.phone,
+      name: user.name,
       shopId: user.shopId,
       type: 'owner',
     };
-    return this.jwtService.sign(payload, { expiresIn: '30d' });
+    return this.jwtService.sign(payload, {
+      expiresIn: '30d',
+      secret: process.env.JWT_SECRET || 'your-secret-key',
+    });
   }
 
   private generateStaffToken(staff: any) {
@@ -181,7 +185,10 @@ export class AuthService {
         pagePermissions:     {},
       },
     };
-    return this.jwtService.sign(payload, { expiresIn: '30d' });
+    return this.jwtService.sign(payload, {
+      expiresIn: '30d',
+      secret: process.env.JWT_SECRET || 'your-secret-key',
+    });
   }
 
   // ─── Profile builders ────────────────────────────────────────────────────

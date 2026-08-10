@@ -1,9 +1,54 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
+import { DataSource } from 'typeorm';
+
+async function runMigrations(dataSource: DataSource) {
+  const q = dataSource.createQueryRunner();
+  try {
+    // Add missing columns to products table if they don't exist
+    const cols = [
+      { name: 'category', type: 'varchar', nullable: true },
+      { name: 'subcategory', type: 'varchar', nullable: true },
+      { name: 'brand', type: 'varchar', nullable: true },
+      { name: 'createdByStaffId', type: 'varchar', nullable: true },
+    ];
+    for (const col of cols) {
+      const result = await q.query(`
+        SELECT column_name FROM information_schema.columns
+        WHERE table_name = 'products' AND column_name = '${col.name}'
+      `);
+      if (result.length === 0) {
+        await q.query(`ALTER TABLE "products" ADD COLUMN "${col.name}" varchar NULL`);
+        console.log(`[DB] Added column products.${col.name}`);
+      }
+    }
+    // Add createdByStaffId to sales
+    const saleCol = await q.query(`
+      SELECT column_name FROM information_schema.columns
+      WHERE table_name = 'sales' AND column_name = 'createdByStaffId'
+    `);
+    if (saleCol.length === 0) {
+      await q.query(`ALTER TABLE "sales" ADD COLUMN "createdByStaffId" varchar NULL`);
+      console.log('[DB] Added column sales.createdByStaffId');
+    }
+  } catch (e) {
+    console.warn('[DB] Migration warning:', (e as any)?.message);
+  } finally {
+    await q.release();
+  }
+}
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // Run migrations on startup
+  try {
+    const dataSource = app.get(DataSource);
+    await runMigrations(dataSource);
+  } catch (e) {
+    console.warn('[DB] Could not run migrations:', (e as any)?.message);
+  }
   
   // CORS should be working - redeploying to fix
   // TODO: Run migrations once createdByStaffId is properly working
