@@ -92,13 +92,23 @@ export class DashboardService {
     const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
     const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
 
+    console.log('Getting staff dashboard for:', staffId);
+    console.log('Date range:', startOfDay, 'to', endOfDay);
+
     // Get staff's sales for today
     const staffSalesToday = await this.salesService.findStaffSales(shopId, staffId, startOfDay, endOfDay);
     
+    console.log('Staff sales found:', staffSalesToday.length);
+    console.log('Sales:', staffSalesToday.map(s => ({ id: s.id, amount: s.totalAmount, date: s.createdAt })));
+
     // Calculate totals for today
     const todayStats = {
       totalSales: staffSalesToday.reduce((sum, sale) => sum + Number(sale.totalAmount), 0),
-      totalProfit: staffSalesToday.reduce((sum, sale) => sum + Number(sale.profit || 0), 0),
+      totalProfit: staffSalesToday.reduce((sum, sale) => {
+        const buyingPrice = sale.product?.buyingPrice || 0;
+        const profit = (Number(sale.unitPrice) - Number(buyingPrice)) * Number(sale.quantity);
+        return sum + profit;
+      }, 0),
       transactions: staffSalesToday.length,
       cashSales: staffSalesToday.filter(s => s.paymentType === 'cash').reduce((sum, s) => sum + Number(s.totalAmount), 0),
       creditSales: staffSalesToday.filter(s => s.paymentType === 'credit').reduce((sum, s) => sum + Number(s.totalAmount), 0),
@@ -111,7 +121,11 @@ export class DashboardService {
     
     const weekStats = {
       totalSales: staffSalesWeek.reduce((sum, sale) => sum + Number(sale.totalAmount), 0),
-      totalProfit: staffSalesWeek.reduce((sum, sale) => sum + Number(sale.profit || 0), 0),
+      totalProfit: staffSalesWeek.reduce((sum, sale) => {
+        const buyingPrice = sale.product?.buyingPrice || 0;
+        const profit = (Number(sale.unitPrice) - Number(buyingPrice)) * Number(sale.quantity);
+        return sum + profit;
+      }, 0),
       transactions: staffSalesWeek.length,
     };
 
@@ -121,7 +135,11 @@ export class DashboardService {
     
     const monthStats = {
       totalSales: staffSalesMonth.reduce((sum, sale) => sum + Number(sale.totalAmount), 0),
-      totalProfit: staffSalesMonth.reduce((sum, sale) => sum + Number(sale.profit || 0), 0),
+      totalProfit: staffSalesMonth.reduce((sum, sale) => {
+        const buyingPrice = sale.product?.buyingPrice || 0;
+        const profit = (Number(sale.unitPrice) - Number(buyingPrice)) * Number(sale.quantity);
+        return sum + profit;
+      }, 0),
       transactions: staffSalesMonth.length,
     };
 
